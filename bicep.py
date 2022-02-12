@@ -1,143 +1,257 @@
-import cv2
-import mediapipe as mp
-import numpy as np
+from CounterModule import *
+from tkinter import *
+import tkinter as tk
+import tkinter.ttk as ttk
+import tkinter.font as font
 import time
+from PIL import Image, ImageTk
+from game import*
+from threading import Thread
+import tkinter as tk
+# from data_collection import data_collection
+# from training import training
+from inference import inference
+from data_collection_yoga import data_collection_yoga
+from data_training_yoga import data_training_yoga
+from inference_yoga import inference_yoga
+import tkinter.font as font
+
+root = tk.Tk(className='Main MENU')
+root.geometry("434x700")
+root.minsize(434,700)
+root.maxsize(434,700)
+
+introFrame = tk.Frame(root, bg= "#F5F7FD" )
+introFrame.place(height=1000, width=630, x=0, y=0)
+
+homeFrame = tk.Frame(root, bg= "#F5F7FD" )
+homeFrame.place(height=1000, width=630, x=1000, y=0)
+
+workoutFrame = tk.Frame(root, bg= "#F5F7FD" )
+workoutFrame.place(height=1000, width=630, x=1000, y=0)
+
+difficultyFrame = tk.Frame(root, bg= "#F5F7FD" )
+difficultyFrame.place(height=1000, width=630, x=1000, y=0)
+
+yogaFrame = tk.Frame(root, bg= "#F5F7FD" )
+yogaFrame.place(height=1000, width=630, x=1000, y=0)
+
+def introFrameOpen():
+    introFrame.place(x=0,y=0)
+    homeFrame.place(x=-630,y=0)
+    workoutFrame.place(x=-630,y=0)
+    difficultyFrame.place(x=-630,y=0)
+    yogaFrame.place(x=-630,y=0)
+
+def homeFrameOpen():
+    homeFrame.place(x=0,y=0)
+    introFrame.place(x=-630,y=0)
+    workoutFrame.place(x=-630,y=0)
+    difficultyFrame.place(x=-630,y=0)
+    yogaFrame.place(x=-630,y=0)
+
+def workoutFrameOpen():
+    workoutFrame.place(x=0,y=0)
+    homeFrame.place(x=-630,y=0)
+    introFrame.place(x=-630,y=0)
+    difficultyFrame.place(x=-630,y=0)
+    yogaFrame.place(x=-630,y=0)
+
+def difficultyFrameOpen():
+    difficultyFrame.place(x=0,y=0)
+    workoutFrame.place(x=-630,y=0)
+    homeFrame.place(x=-630,y=0)
+    introFrame.place(x=-630,y=0)
+    yogaFrame.place(x=-630,y=0)
+
+def yogaFrameOpen():
+    difficultyFrame.place(x=-630,y=0)
+    workoutFrame.place(x=-630,y=0)
+    homeFrame.place(x=-630,y=0)
+    introFrame.place(x=-630,y=0)
+    yogaFrame.place(x=0,y=0)
 
 
-mp_drawing = mp.solutions.drawing_utils
-mp_pose = mp.solutions.pose
 
-# inputGoal = int(input("Enter your rep goal for each arm: "))
-inputGoal = 2
-width_cam = 1000
-height_cam = 700
-cap = cv2.VideoCapture(0)
-cap.set(3,width_cam)
-cap.set(4,height_cam)
+def easy():
+    entry1 = 3
+    difficulty = entry1
+    running_counter(difficulty)
+    take_rest()
+    toeTouch_counter(difficulty)
+    take_rest()
+    jump_counter(5)
+    take_rest()
+    curl_counter(difficulty)
+    homeFrameOpen()
+    cap.release()
 
-def calculate_angle(a,b,c):#shoulder, elbow, wrist
-    a = np.array(a) # First
-    b = np.array(b) # Mid
-    c = np.array(c) # End
+def moderate():
+    entry1 = 3
+    difficulty = entry1
+    curl_counter(difficulty)
+    take_rest()
+    squat_counter(difficulty)
+    take_rest()
+    tricep_counter(difficulty)
+    take_rest()
+    homeFrameOpen()
+    cap.release()
 
-    radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
-    angle = np.abs(radians*180.0/np.pi)
-    if angle >180.0:
-        angle = 360-angle
-    return angle
+def hard():
+    entry1 = 15
+    difficulty = entry1
+    curl_counter(difficulty)
+    running_counter(difficulty)
+    squat_counter(difficulty)
+    push_up_counter(difficulty)
+    homeFrameOpen()
+    cap.release()
 
-# Curl counter variables
+def posture_detector_callback():
+    posture_detector_advanced_u()
+    homeFrameOpen()
 
-## Setup mediapipe instance
-with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
-    counter = 0
-    counter_r = 0
-    stage = None
-    stage_r = None
-    while cap.isOpened():
-        ret, frame = cap.read()
-
-        # Recolor image to RGB
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) #converting BGR to RGB so that it becomes easier for library to read the image
-        image.flags.writeable = False #this step is done to save some memoery
-
-        # Make detection
-        results = pose.process(image) #We are using the pose estimation model
-
-        # Recolor back to BGR
-        image.flags.writeable = True
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-
-
-        # Extract landmarks
-        try:
-            landmarks = results.pose_landmarks.landmark
-
-            # Get coordinates
-            shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-            elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
-            wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x,landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
-            # Calculate angle
-            angle = calculate_angle(shoulder, elbow, wrist)
+def yoga_run():
+    inference_yoga()
+    homeFrameOpen()
 
 
-            # Get coordinates of right hand
-            shoulder_r = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
-            elbow_r = [landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y]
-            wrist_r = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x,landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
-            # Calculate angle
-            angle_r = calculate_angle(shoulder_r, elbow_r, wrist_r)
+def counter_time_callback():
+    # if __name__ == '__main__':
+    #     Thread(target = Zenitsu_Run).start()
+    #     Thread(target = game_detection).start()
+    # inference()
+    pass
+#######################################
+# Sign in frame
 
-            # Visualize angle
-            cv2.putText(image, str(angle),
-                        tuple(np.multiply(elbow, [640, 480]).astype(int)),
-                        cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
+landingImage = (Image.open("Assets\image 1.png"))
+landingImage = landingImage.resize((434,563), Image.ANTIALIAS)
+landingImage = ImageTk.PhotoImage(landingImage)
+label = Label(introFrame, image = landingImage)
+label.place(x=int(0), y=(0))
 
-            # Curl counter logic for left
-            if angle > 160:
-                stage = "Down"
-            if angle < 30 and stage =='Down':
-                stage="Up"
-                counter +=1
+signupImage = Image.open("Assets\image 3.png")
+signupImage = signupImage.resize((230,60), Image.ANTIALIAS)
+signupImage = ImageTk.PhotoImage(signupImage)
+startButton = Button(introFrame,image = signupImage ,bg='#F5F7FD',command = homeFrameOpen ,borderwidth = 0)
+startButton.place(x=int(102.2), y=int(503.55))
 
-            # Curl counter logic for right
-            if angle_r > 160:
-                stage_r = "Down"
-            if angle_r < 30 and stage_r =='Down':
-                stage_r="Up"
-                counter_r +=1
-
-        except:
-            pass
-
-        # Render curl counter for right hand
-        # Setup status box for right hand
-        cv2.rectangle(image, (0,0), (70,80), (0,0,0), -1)
-        # cv2.rectangle(image, (0,35), (220,80), (245,117,16), -1)
-        cv2.rectangle(image, (75,0), (220,80), (0,0,0), -1)
-        # Rep data
-        cv2.putText(image, 'REPS', (5,25), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,255,255), 1, cv2.LINE_AA)
-        cv2.putText(image, str(counter_r), (10,65), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255,255,255), 1, cv2.LINE_AA)
-        # Stage data
-        cv2.putText(image, 'STAGE', (80,25), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,255,255), 1, cv2.LINE_AA)
-        cv2.putText(image, stage_r, (80,65), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255,255,255), 1, cv2.LINE_AA)
+startimage = Image.open("Assets\image 4.png")
+startimage = startimage.resize((230,60), Image.ANTIALIAS)
+startimage = ImageTk.PhotoImage(startimage)
+startButton = Button(introFrame,image = startimage ,bg='#F5F7FD',command = homeFrameOpen ,borderwidth = 0)
+startButton.place(x=int(102.2) ,y=int(580.43))
 
 
-        # Render curl counter for left hand
-        # Setup status box for left
-        cv2.rectangle(image, (width_cam-235,0), (width_cam-165,80), (0,0,0), -1)
-        # cv2.rectangle(image, (0,35), (220,80), (245,117,16), -1)
-        cv2.rectangle(image, (width_cam-160,0), (width_cam,80), (0,0,0), -1)
-        # Rep data
-        cv2.putText(image, 'REPS', (width_cam-235,25), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,255,255), 1, cv2.LINE_AA)
-        cv2.putText(image, str(counter), (width_cam-240,65), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255,255,255), 1, cv2.LINE_AA)
-        # Stage data
-        cv2.putText(image, 'STAGE', (width_cam-220+80,25), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,255,255), 1, cv2.LINE_AA)
-        cv2.putText(image, stage, (width_cam-220+80,65), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255,255,255), 1, cv2.LINE_AA)
+################################################################################
+#home Frame
 
-        #for the instructor
-        cv2.rectangle(image, (width_cam-550,height_cam-60), (width_cam,height_cam), (0,0,0), -1)
-        if counter > counter_r:
-            cv2.putText(image, 'Do Left arm next', (width_cam -530,height_cam-15), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255,255,255), 2, cv2.LINE_AA)
-        elif counter_r > counter:
-            cv2.putText(image, 'Do Right arm next', (width_cam -530,height_cam-15), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255,255,255), 2, cv2.LINE_AA)
-        elif counter == inputGoal and counter_r == inputGoal:
-            cv2.putText(image, 'GOOD JOB', (540,height_cam-60), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,0,0), 2, cv2.LINE_AA)
+topimage = (Image.open("Assets\page1_1.png"))
+topimage = topimage.resize((434,156), Image.ANTIALIAS)
+topimage = ImageTk.PhotoImage(topimage)
+label = Label(homeFrame, image = topimage,borderwidth = 0)
+label.place(x=0, y=0)
 
-        # Render detections
-        mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                                  mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2),
-                                  mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2) )
+buttonHome1 = Image.open("Assets\page1_2.png")
+buttonHome1 = buttonHome1.resize((367,133), Image.ANTIALIAS)
+buttonHome1 = ImageTk.PhotoImage(buttonHome1)
+startButton = Button(homeFrame,image = buttonHome1 ,command = workoutFrameOpen ,borderwidth = 0)
+startButton.place(x=33 ,y=182)
 
-        cv2.imshow('Mediapipe Feed', image)
+buttonHome2 = Image.open("Assets\page1_3.png")
+buttonHome2 = buttonHome2.resize((367,133), Image.ANTIALIAS)
+buttonHome2 = ImageTk.PhotoImage(buttonHome2)
+startButton = Button(homeFrame,image = buttonHome2 ,command = posture_detector_callback ,borderwidth = 0)
+startButton.place(x=33 ,y=341)
+
+buttonHome3 = Image.open("Assets\page1_5.png")
+buttonHome3 = buttonHome3.resize((367,133), Image.ANTIALIAS)
+buttonHome3 = ImageTk.PhotoImage(buttonHome3)
+startButton = Button(homeFrame,image = buttonHome3 , command = inference,borderwidth = 0)
+startButton.place(x=33 ,y=501)
+
+################################################################################
+#workout Frame
+
+topimagework = (Image.open("Assets\page1_1.png"))
+topimagework = topimagework.resize((434,156), Image.ANTIALIAS)
+topimagework = ImageTk.PhotoImage(topimagework)
+label = Label(workoutFrame, image = topimagework,borderwidth = 0)
+label.place(x=0, y=0)
+
+buttonHomework1 = Image.open("Assets\page2_2.png")
+buttonHomework1 = buttonHomework1.resize((367,133), Image.ANTIALIAS)
+buttonHomework1 = ImageTk.PhotoImage(buttonHomework1)
+startButton1 = Button(workoutFrame,image = buttonHomework1 ,command = difficultyFrameOpen ,borderwidth = 0)
+startButton1.place(x=33 ,y=182)
+
+buttonHomework2 = Image.open("Assets\page2_3.png")
+buttonHomework2 = buttonHomework2.resize((367,133), Image.ANTIALIAS)
+buttonHomework2 = ImageTk.PhotoImage(buttonHomework2)
+startButton2 = Button(workoutFrame,image = buttonHomework2 ,command = yogaFrameOpen ,borderwidth = 0)
+startButton2.place(x=33 ,y=341)
+
+buttonHomework3 = Image.open("Assets\page2_4.png")
+buttonHomework3 = buttonHomework3.resize((367,133), Image.ANTIALIAS)
+buttonHomework3 = ImageTk.PhotoImage(buttonHomework3)
+startButton3 = Button(workoutFrame,image = buttonHomework3 ,command = hard ,borderwidth = 0)
+startButton3.place(x=33 ,y=501)
 
 
-        if counter == inputGoal and counter_r == inputGoal:
-            break
+################################################################################
+#difficulty Frame
 
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            break
+topimagediff = (Image.open("Assets\page1_1.png"))
+topimagediff = topimagediff.resize((434,156), Image.ANTIALIAS)
+topimagediff = ImageTk.PhotoImage(topimagediff)
+label = Label(difficultyFrame, image = topimagediff,borderwidth = 0)
+label.place(x=0, y=0)
 
-cap.release()
-cv2.destroyAllWindows()
+buttonHomediff1 = Image.open("Assets\page3_2.png")
+buttonHomediff1 = buttonHomediff1.resize((367,133), Image.ANTIALIAS)
+buttonHomediff1 = ImageTk.PhotoImage(buttonHomediff1)
+startButton4 = Button(difficultyFrame,image = buttonHomediff1 ,command = easy ,borderwidth = 0)
+startButton4.place(x=33 ,y=182)
+
+buttonHomediff2 = Image.open("Assets\page3_3.png")
+buttonHomediff2 = buttonHomediff2.resize((367,133), Image.ANTIALIAS)
+buttonHomediff2 = ImageTk.PhotoImage(buttonHomediff2)
+startButton5 = Button(difficultyFrame,image = buttonHomediff2 ,command = moderate ,borderwidth = 0)
+startButton5.place(x=33 ,y=341)
+
+buttonHomediff3 = Image.open("Assets\page3_4.png")
+buttonHomediff3 = buttonHomediff3.resize((367,133), Image.ANTIALIAS)
+buttonHomediff3 = ImageTk.PhotoImage(buttonHomediff3)
+startButton6 = Button(difficultyFrame,image = buttonHomediff3, command = hard ,borderwidth = 0)
+startButton6.place(x=33 ,y=501)
+
+###############################
+#yoga frame
+
+topimageyoga = (Image.open("Assets\page4_1.png"))
+topimageyoga = topimageyoga.resize((434,156), Image.ANTIALIAS)
+topimageyoga = ImageTk.PhotoImage(topimageyoga)
+label = Label(yogaFrame, image = topimageyoga,borderwidth = 0)
+label.place(x=0, y=0)
+
+buttonHomeyoga1 = Image.open("Assets\page4_2.png")
+buttonHomeyoga1 = buttonHomeyoga1.resize((367,133), Image.ANTIALIAS)
+buttonHomeyoga1 = ImageTk.PhotoImage(buttonHomeyoga1)
+startButton7 = Button(yogaFrame,image = buttonHomeyoga1 ,command = data_collection_yoga ,borderwidth = 0)
+startButton7.place(x=33 ,y=182)
+
+buttonHomeyoga2 = Image.open("Assets\page4_3.png")
+buttonHomeyoga2 = buttonHomeyoga2.resize((367,133), Image.ANTIALIAS)
+buttonHomeyoga2 = ImageTk.PhotoImage(buttonHomeyoga2)
+startButton8 = Button(yogaFrame,image = buttonHomeyoga2 ,command = data_training_yoga ,borderwidth = 0)
+startButton8.place(x=33 ,y=341)
+
+buttonHomeyoga3 = Image.open("Assets\page4_4.png")
+buttonHomeyoga3 = buttonHomeyoga3.resize((367,133), Image.ANTIALIAS)
+buttonHomeyoga3 = ImageTk.PhotoImage(buttonHomeyoga3)
+startButton9 = Button(yogaFrame,image = buttonHomeyoga3,command = yoga_run ,borderwidth = 0)
+startButton9.place(x=33 ,y=501)
+
+root.mainloop()
